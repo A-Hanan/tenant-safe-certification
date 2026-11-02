@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework.test import APIClient
 
 from approvals.api.urls import router
-from institutions.models import Institution
+from institutions.models import Institution, Role
 from tests.factories import (
     ApprovalRequestFactory,
     InstitutionFactory,
@@ -14,7 +14,11 @@ pytestmark = pytest.mark.django_db
 
 EXPECTED_ROUTES = [
     ("approval-list", "get", False),
+    ("approval-list", "post", False),
     ("approval-detail", "get", True),
+    ("approval-submit", "post", True),
+    ("approval-approve", "post", True),
+    ("approval-reject", "post", True),
 ]
 
 
@@ -57,22 +61,36 @@ def test_school_member_lists_only_their_school_approvals():
 
 
 @pytest.mark.parametrize("member_kind", ["school", "lender"])
-def test_member_cannot_retrieve_other_school_record_through_own_path(member_kind):
+@pytest.mark.parametrize(
+    ("route_name", "method", "role"),
+    [
+        ("approval-detail", "get", Role.VIEWER),
+        ("approval-submit", "post", Role.SUBMITTER),
+        ("approval-approve", "post", Role.APPROVER),
+        ("approval-reject", "post", Role.APPROVER),
+    ],
+)
+def test_member_cannot_access_other_school_record_through_own_path(
+    member_kind, route_name, method, role
+):
     institution = InstitutionFactory(kind=member_kind)
-    membership = MembershipFactory(institution=institution)
+    membership = MembershipFactory(institution=institution, role=role)
     other_school = InstitutionFactory(kind=Institution.Kind.SCHOOL)
     approval = ApprovalRequestFactory(institution=other_school)
     client = APIClient()
     client.force_authenticate(user=membership.user)
 
-    response = client.get(
+    response = getattr(client, method)(
         reverse(
-            "approval-detail",
+            route_name,
             kwargs={"institution_id": institution.pk, "pk": approval.pk},
         )
     )
 
     assert response.status_code == 404
+    approval.refresh_from_db()
+    assert approval.status == "draft"
+    assert not approval.audit_events.exists()
 
 
 @pytest.mark.parametrize("route_name,method,detail", EXPECTED_ROUTES)

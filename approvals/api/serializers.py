@@ -19,3 +19,15 @@ class ApprovalRequestReadSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = fields
+
+
+class ApprovalRequestCreateSerializer(serializers.ModelSerializer):
+    currency = serializers.RegexField(regex=r"\A[A-Za-z]{3}\Z")
+
+    class Meta:
+        model = ApprovalRequest
+        fields = ["title", "student_reference", "amount_cents", "currency"]
+        extra_kwargs = {"amount_cents": {"min_value": 1}}
+
+    def validate_currency(self, value):
+        return value.upper()
