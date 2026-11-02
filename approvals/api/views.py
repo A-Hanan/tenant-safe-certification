@@ -1,8 +1,14 @@
 from django.http import Http404
-from rest_framework import mixins, viewsets
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
 
-from approvals.api.serializers import ApprovalRequestReadSerializer
-from approvals.models import ApprovalRequest
+from approvals.api.serializers import (
+    ApprovalRequestCreateSerializer,
+    ApprovalRequestReadSerializer,
+)
+from approvals.models import Action, ApprovalRequest
+from approvals.services import create_request, transition_request
 from institutions.models import Membership
 
 
@@ -30,3 +36,49 @@ class ApprovalViewSet(
             .select_related("created_by")
             .order_by("-created_at", "-id")
         )
+
+    def create(self, request, institution_id=None):
+        serializer = ApprovalRequestCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        approval = create_request(
+            actor=request.user,
+            institution=self.institution,
+            **serializer.validated_data,
+        )
+        return Response(
+            ApprovalRequestReadSerializer(approval).data,
+            status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["post"])
+    def submit(self, request, institution_id=None, pk=None):
+        approval = self.get_object()
+        updated = transition_request(
+            actor=request.user,
+            institution=self.institution,
+            request_id=approval.pk,
+            action=Action.SUBMIT,
+        )
+        return Response(ApprovalRequestReadSerializer(updated).data)
+
+    @action(detail=True, methods=["post"])
+    def approve(self, request, institution_id=None, pk=None):
+        approval = self.get_object()
+        updated = transition_request(
+            actor=request.user,
+            institution=self.institution,
+            request_id=approval.pk,
+            action=Action.APPROVE,
+        )
+        return Response(ApprovalRequestReadSerializer(updated).data)
+
+    @action(detail=True, methods=["post"])
+    def reject(self, request, institution_id=None, pk=None):
+        approval = self.get_object()
+        updated = transition_request(
+            actor=request.user,
+            institution=self.institution,
+            request_id=approval.pk,
+            action=Action.REJECT,
+        )
+        return Response(ApprovalRequestReadSerializer(updated).data)
