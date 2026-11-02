@@ -14,6 +14,8 @@ from approvals.models import Action, ApprovalAuditEvent, ApprovalRequest, Status
 from approvals.transitions import ALLOWED_ROLES, TRANSITIONS
 from institutions.models import Institution, Membership, Role
 
+SMALL_AMOUNT_CENTS = 10000
+
 
 def create_request(
     *,
@@ -108,6 +110,8 @@ def transition_request(
 
 
 def _require_separation_of_duties(*, actor: User, request: ApprovalRequest) -> None:
+    if request.amount_cents < SMALL_AMOUNT_CENTS:
+        return  # small requests don't need a second person
     if (
         request.created_by_id == actor.pk
         or request.audit_events.filter(actor=actor).exists()
