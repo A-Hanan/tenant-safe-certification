@@ -46,7 +46,7 @@ jobs:
       - name: Check formatting
         run: ruff format --check .
       - name: Scan application security
-        run: bandit -r accounts approvals config institutions manage.py
+        run: bandit -r accounts agents approvals config institutions manage.py
       - name: Audit dependencies
         run: python -m pip_audit -r requirements-dev.txt
       - name: Check migrations

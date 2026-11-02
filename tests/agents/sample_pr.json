@@ -1,0 +1,14 @@
+{
+  "pr_number": 12,
+  "files": [
+    {
+      "filename": "approvals/services.py",
+      "status": "modified",
+      "patch": "+# Synthetic approval change without a matching test change"
+    },
+    {
+      "filename": "README.md",
+      "status": "modified"
+    }
+  ]
+}
