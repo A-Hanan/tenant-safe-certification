@@ -142,7 +142,8 @@ and variables `LLM_MODEL`, `LLM_INPUT_COST_PER_MTOK`, and
 Optional `LLM_MAX_INPUT_CHARS` and `LLM_MAX_OUTPUT_TOKENS` default to 6000 and 220.
 
 Only flagged runs call the LLM: one call, no retries or tools, with a 20-second
-socket timeout. Input contains filenames, rule IDs, and truncated patches marked
+socket timeout. Thinking is explicitly disabled so the small output budget goes
+to the visible explanation. Input contains filenames, rule IDs, and truncated patches marked
 as untrusted. Output is capped, mentions neutralized, and the comment marker
 removed. Missing configuration or provider errors preserve the deterministic
 comment. A provider-side spending limit adds an account-level boundary.
