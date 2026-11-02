@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import ApprovalRequest
+from .models import ApprovalAuditEvent, ApprovalRequest
 
 
 @admin.register(ApprovalRequest)
@@ -17,6 +17,33 @@ class ApprovalRequestAdmin(admin.ModelAdmin):
         "created_by",
         "created_at",
         "updated_at",
+    )
+    actions = None
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(ApprovalAuditEvent)
+class ApprovalAuditEventAdmin(admin.ModelAdmin):
+    list_display = ("id", "institution", "request", "actor", "action", "created_at")
+    readonly_fields = (
+        "id",
+        "institution",
+        "request",
+        "actor",
+        "actor_kind",
+        "actor_role",
+        "action",
+        "from_status",
+        "to_status",
+        "created_at",
     )
     actions = None
 
