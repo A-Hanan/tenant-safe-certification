@@ -172,9 +172,12 @@ not verify live GitHub permissions or Anthropic credentials.
 - Tenant scoping is application-level, without PostgreSQL row-level security.
   School and lender are categories; each institution ID is a separate boundary.
   Cross-institution grants are not implemented.
-- The GitHub token has only `contents: read`, `pull-requests: read`, and
-  `issues: write`, with no merge rights. A same-repository PR can still edit the
-  workflow itself; production needs branch protection and code owners.
+- The GitHub token has `contents: read`, `pull-requests: write`, and `issues: write`.
+  PR write access is needed for comment posting in this integration; it also grants
+  broader PR-management capabilities, so it is not a comment-only permission.
+  The agent only uses it to manage its comment. It lacks the `contents: write`
+  permission required by the merge endpoint. A same-repository PR can still edit
+  the workflow itself; production needs branch protection and code owners.
 - Fork PR tokens normally cannot post comments or access LLM secrets. A failed
   comment write fails the job. The live demo uses a same-repository PR.
 - Production next steps include row-level security, database audit and status
