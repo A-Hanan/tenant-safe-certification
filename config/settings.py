@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "accounts.apps.AccountsConfig",
 ]
 
 MIDDLEWARE = [
@@ -67,6 +68,8 @@ ASGI_APPLICATION = "config.asgi.application"
 DATABASES = {"default": dj_database_url.parse(required_env("DATABASE_URL"))}
 if DATABASES["default"]["ENGINE"] != "django.db.backends.postgresql":
     raise ImproperlyConfigured("DATABASE_URL must use PostgreSQL.")
+
+AUTH_USER_MODEL = "accounts.User"
 
 AUTH_PASSWORD_VALIDATORS = [
     {
