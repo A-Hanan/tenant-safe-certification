@@ -9,7 +9,12 @@ BOT_LOGIN = "github-actions[bot]"
 
 
 class GitHubError(RuntimeError):
-    pass
+    def __init__(
+        self, message: str, *, status: int | None = None, method: str | None = None
+    ):
+        super().__init__(message)
+        self.status = status
+        self.method = method
 
 
 class GitHubClient:
@@ -37,7 +42,9 @@ class GitHubClient:
             response = connection.getresponse()
             if not 200 <= response.status < 300:
                 # Do not expose response bodies, which may contain sensitive data.
-                raise GitHubError(f"GitHub request failed: HTTP {response.status}")
+                raise GitHubError(
+                    "GitHub HTTP request failed", status=response.status, method=method
+                )
             return json.loads(response.read())
         except (HTTPException, OSError, ValueError) as error:
             raise GitHubError("GitHub request or JSON decoding failed") from error
