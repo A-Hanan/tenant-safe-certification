@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "rest_framework.authtoken",
     "accounts.apps.AccountsConfig",
     "institutions.apps.InstitutionsConfig",
+    "approvals.apps.ApprovalsConfig",
 ]
 
 MIDDLEWARE = [
