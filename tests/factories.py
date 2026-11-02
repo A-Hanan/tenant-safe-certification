@@ -1,6 +1,7 @@
 import factory
 
 from accounts.models import User
+from approvals.models import ApprovalRequest, Status
 from institutions.models import Institution, Membership, Role
 
 
@@ -29,3 +30,16 @@ class MembershipFactory(factory.django.DjangoModelFactory):
     institution = factory.SubFactory(InstitutionFactory)
     role = Role.VIEWER
     is_active = True
+
+
+class ApprovalRequestFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ApprovalRequest
+
+    institution = factory.SubFactory(InstitutionFactory)
+    title = factory.Sequence(lambda n: f"Demo Approval {n}")
+    student_reference = factory.Sequence(lambda n: f"DEMO-STUDENT-{n}")
+    amount_cents = 250000
+    currency = "USD"
+    status = Status.DRAFT
+    created_by = factory.SubFactory(UserFactory)
