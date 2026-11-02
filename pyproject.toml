@@ -1,0 +1,9 @@
+[project]
+name = "django-approval-sample"
+version = "0.1.0"
+description = "A small approval workflow sample using synthetic data."
+requires-python = ">=3.12,<3.13"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
