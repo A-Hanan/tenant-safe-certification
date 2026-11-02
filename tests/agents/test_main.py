@@ -151,3 +151,24 @@ def test_cli_finding_is_advisory(monkeypatch):
     monkeypatch.setattr("agents.main.run", lambda **kwargs: {"verdict": "flagged"})
 
     assert main() == 0
+
+
+def test_http_error_log_retains_status_without_response_text(
+    monkeypatch, run_env, tmp_path
+):
+    def fail(**kwargs):
+        raise GitHubError("private response text", status=403, method="POST")
+
+    monkeypatch.setattr("agents.main.GitHubClient", fail)
+    path = tmp_path / "log.json"
+
+    with pytest.raises(GitHubError):
+        run(env=run_env, log_path=path)
+
+    raw = path.read_text()
+    logged = json.loads(raw)
+    assert logged["github_http_status"] == 403
+    assert logged["github_method"] == "POST"
+    assert logged["error_type"] == "GitHubError"
+    assert logged["verdict"] == "error"
+    assert "private response text" not in raw

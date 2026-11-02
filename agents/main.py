@@ -6,7 +6,7 @@ from fnmatch import fnmatchcase
 from pathlib import Path
 
 from agents.explain import explain_findings, sanitize_output
-from agents.github import GitHubClient
+from agents.github import GitHubClient, GitHubError
 from agents.rules import Finding, evaluate_rules, load_rules
 
 
@@ -85,9 +85,13 @@ def run(
         log["comment_action"] = client.upsert_comment(pr_number, finding_body=body)
         log["verdict"] = "flagged" if findings else "clear"
         return log
-    except Exception:
+    except Exception as error:
         # Exception text may contain credentials or response bodies; never log it.
         log["error"] = "agent_run_failed"
+        log["error_type"] = type(error).__name__
+        if isinstance(error, GitHubError):
+            log["github_http_status"] = error.status
+            log["github_method"] = error.method
         raise
     finally:
         log_path.parent.mkdir(parents=True, exist_ok=True)
