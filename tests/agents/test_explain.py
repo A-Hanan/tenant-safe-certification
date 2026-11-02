@@ -29,7 +29,8 @@ def test_request_is_single_bounded_call(llm_env, anthropic_http, provider_respon
     assert (method, path) == ("POST", "/v1/messages")
     assert headers["x-api-key"] == "synthetic-key"
     assert headers["anthropic-version"] == "2023-06-01"
-    assert set(body) == {"model", "max_tokens", "system", "messages"}
+    assert set(body) == {"model", "max_tokens", "thinking", "system", "messages"}
+    assert body["thinking"] == {"type": "disabled"}
     assert body["max_tokens"] == 220
     assert body["model"] == "synthetic-model"
     assert "untrusted" in body["system"]
