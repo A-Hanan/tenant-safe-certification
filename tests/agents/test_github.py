@@ -237,6 +237,18 @@ def test_comment_listing_failure_does_not_create_comment(client, http):
     assert len(calls) == 1
 
 
+def test_http_failure_exposes_safe_diagnostics(client, http):
+    responses, _ = http
+    responses.extend([(200, []), (403, {"message": "private response body"})])
+
+    with pytest.raises(GitHubError) as raised:
+        client.upsert_comment(12, finding_body="Missing")
+
+    assert raised.value.status == 403
+    assert raised.value.method == "POST"
+    assert "private response body" not in str(raised.value)
+
+
 @pytest.mark.parametrize("existing", [[], [comment()]])
 def test_comment_write_failure_raises(client, http, existing):
     responses, _ = http
