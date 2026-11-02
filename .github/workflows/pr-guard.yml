@@ -1,0 +1,71 @@
+name: PR guard
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+
+concurrency:
+  group: pr-guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Report initial bootstrap
+        if: ${{ hashFiles('agents/main.py', '.github/workflows/pr-guard.yml') == '' }}
+        shell: python
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          import json
+          import os
+          from pathlib import Path
+
+          message = "Not evaluated: the base commit predates the PR guard."
+          print(f"::notice::{message}")
+          Path("artifacts").mkdir(exist_ok=True)
+          Path("artifacts/pr-guard.json").write_text(
+              json.dumps({
+                  "run_id": os.environ["GITHUB_RUN_ID"],
+                  "pr_number": int(os.environ["PR_NUMBER"]),
+                  "verdict": "not_evaluated",
+                  "fallback_reason": "base_predates_agent",
+                  "llm_called": False,
+              }, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as summary:
+              summary.write(message + "\n")
+      - name: Run PR guard
+        if: ${{ hashFiles('agents/main.py', '.github/workflows/pr-guard.yml') != '' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ vars.LLM_MODEL }}
+          LLM_MAX_INPUT_CHARS: ${{ vars.LLM_MAX_INPUT_CHARS || '6000' }}
+          LLM_MAX_OUTPUT_TOKENS: ${{ vars.LLM_MAX_OUTPUT_TOKENS || '220' }}
+          LLM_INPUT_COST_PER_MTOK: ${{ vars.LLM_INPUT_COST_PER_MTOK }}
+          LLM_OUTPUT_COST_PER_MTOK: ${{ vars.LLM_OUTPUT_COST_PER_MTOK }}
+        run: python -m agents.main
+      - name: Upload run log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pr-guard-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/pr-guard.json
+          if-no-files-found: error
