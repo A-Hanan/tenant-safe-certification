@@ -1,6 +1,8 @@
 -r requirements.txt
-pytest==8.3.5
+pytest==9.0.3
 pytest-django==4.11.1
 ruff==0.11.13
 factory_boy==3.3.0
 coverage==7.6.12
+bandit==1.8.3
+pip-audit==2.9.0
