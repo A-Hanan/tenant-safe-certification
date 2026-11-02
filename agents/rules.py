@@ -1,6 +1,6 @@
 import tomllib
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from fnmatch import fnmatchcase
 from pathlib import Path
 
@@ -10,6 +10,7 @@ class ChangedFile:
     filename: str
     status: str
     previous_filename: str | None = None
+    patch: str | None = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)

@@ -79,6 +79,7 @@ class GitHubClient:
                 filename = row["filename"]
                 status = row["status"]
                 previous = row.get("previous_filename")
+                patch = row.get("patch")
                 if (
                     not isinstance(filename, str)
                     or not filename
@@ -94,9 +95,10 @@ class GitHubClient:
                     }
                     or (previous is not None and not isinstance(previous, str))
                     or (status == "renamed" and not previous)
+                    or (patch is not None and not isinstance(patch, str))
                 ):
                     raise GitHubError("Invalid PR file metadata")
-                files.append(ChangedFile(filename, status, previous))
+                files.append(ChangedFile(filename, status, previous, patch))
             after = self._request("GET", path)
             if (
                 len(files) != count

@@ -87,6 +87,16 @@ def test_files_paginate_and_preserve_rename(client, http):
     assert calls[0][3]["Authorization"] == "Bearer synthetic-token"
 
 
+def test_files_preserve_optional_patch(client, http):
+    responses, _ = http
+    row = {"filename": "source.py", "status": "modified", "patch": "+synthetic"}
+    responses.extend([(200, metadata(1)), (200, [row]), (200, metadata(1))])
+
+    assert client.list_pr_files(12) == (
+        ChangedFile("source.py", "modified", patch="+synthetic"),
+    )
+
+
 @pytest.mark.parametrize("count", [0, 100])
 def test_empty_and_exact_page_boundary(client, http, count):
     responses, _ = http
