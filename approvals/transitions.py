@@ -3,6 +3,7 @@ from institutions.models import Role
 
 TRANSITIONS = {
     (Status.DRAFT, Action.SUBMIT): Status.PENDING,
+    (Status.DRAFT, Action.APPROVE): Status.APPROVED,
     (Status.PENDING, Action.APPROVE): Status.APPROVED,
     (Status.PENDING, Action.REJECT): Status.REJECTED,
 }

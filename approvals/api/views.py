@@ -32,7 +32,7 @@ class ApprovalViewSet(
 
     def get_queryset(self):
         return (
-            ApprovalRequest.objects.for_institution(self.institution)
+            ApprovalRequest.objects.all()
             .select_related("created_by")
             .order_by("-created_at", "-id")
         )
