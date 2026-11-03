@@ -53,6 +53,23 @@ def test_creator_with_approver_membership_cannot_review_own_request(action):
     )
 
 
+def test_creator_with_approver_membership_cannot_approve_own_small_request():
+    creator = MembershipFactory(role=Role.APPROVER)
+    approval = ApprovalRequestFactory(
+        institution=creator.institution,
+        created_by=creator.user,
+        status=Status.PENDING,
+        amount_cents=5000,
+    )
+
+    assert_action_refused(
+        actor=creator.user,
+        approval=approval,
+        action=Action.APPROVE,
+        expected_code="separation_of_duties",
+    )
+
+
 @pytest.mark.parametrize("action", [Action.APPROVE, Action.REJECT])
 def test_submitter_cannot_review_after_becoming_approver(action):
     submitter = MembershipFactory(role=Role.SUBMITTER)
